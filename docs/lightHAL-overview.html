@@ -1,0 +1,300 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lightHAL Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one reading column; each picture sits in its own scrollable figure, legend first. */
+:root {
+  --bg: #f6f7f8;
+  --fg: #1c2127;
+  --muted: #5b6570;
+  --card: #ffffff;
+  --line: #c9d0d6;
+  --zone: #eceff2;
+  --own: #1f7a5c;          /* yours */
+  --own-tint: #e3f2ec;
+  --foreign: #b4441f;      /* someone else's */
+  --foreign-tint: #fbe9e2;
+  --cloud: #5b4bb3;        /* Anthropic cloud */
+  --cloud-tint: #ecebfa;
+  --grey: #7a8590;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181c; --fg: #e6eaee; --muted: #9aa5b0; --card: #1c2228; --line: #38414a; --zone: #191e23;
+    --own: #4cc79c; --own-tint: #15302a; --foreign: #f08a63; --foreign-tint: #36211a;
+    --cloud: #a99cf2; --cloud-tint: #24213f; --grey: #8d98a3; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181c; --fg: #e6eaee; --muted: #9aa5b0; --card: #1c2228; --line: #38414a; --zone: #191e23;
+  --own: #4cc79c; --own-tint: #15302a; --foreign: #f08a63; --foreign-tint: #36211a;
+  --cloud: #a99cf2; --cloud-tint: #24213f; --grey: #8d98a3; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 64px; display: grid; gap: 40px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; margin: 0; text-wrap: balance; font-weight: 700; }
+h2 { font-size: 21px; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+.lead { color: var(--muted); font-size: 16.5px; }
+section { display: grid; gap: 14px; }
+section > p { max-width: 72ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 26px; height: 0; border-top: 3px solid; display: inline-block; }
+.sw.dash { border-top-style: dashed; }
+.chip { width: 14px; height: 14px; border-radius: 4px; border: 2px solid; display: inline-block; }
+figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+figure svg { display: block; min-width: 900px; width: 100%; height: auto; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--zone); padding: 1px 5px; border-radius: 4px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.note { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; min-width: 0; }
+.note h3 { margin: 0; font-size: 15.5px; }
+.note.bad { border-left: 4px solid var(--foreign); }
+.note.good { border-left: 4px solid var(--own); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.tablebox { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.mono { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+.yes { color: var(--own); font-weight: 600; }
+.no { color: var(--foreign); font-weight: 600; }
+
+/* SVG styling: all colour from tokens so both themes work */
+svg text { font-family: var(--font-body); fill: var(--fg); }
+svg .t { font-size: 15px; font-weight: 600; }
+svg .s { font-size: 12.5px; fill: var(--muted); }
+svg .m { font-family: var(--font-mono); font-size: 12.5px; }
+svg .zl { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; fill: var(--muted); }
+svg .lbl { font-size: 12px; fill: var(--muted); }
+svg .lbl-own { font-size: 12px; fill: var(--own); font-weight: 600; }
+svg .lbl-foreign { font-size: 12px; fill: var(--foreign); font-weight: 600; }
+svg .lbl-cloud { font-size: 12px; fill: var(--cloud); font-weight: 600; }
+svg .zone { fill: var(--zone); }
+svg .box { fill: var(--card); stroke: var(--line); stroke-width: 1.25; }
+svg .own { fill: var(--own-tint); stroke: var(--own); stroke-width: 1.5; }
+svg .foreign { fill: var(--foreign-tint); stroke: var(--foreign); stroke-width: 1.5; }
+svg .cloudb { fill: var(--cloud-tint); stroke: var(--cloud); stroke-width: 1.5; }
+svg .frame-own { fill: none; stroke: var(--own); stroke-width: 1.5; stroke-dasharray: 2 0; }
+svg .frame-foreign { fill: none; stroke: var(--foreign); stroke-width: 1.5; }
+svg .a { fill: none; stroke-width: 2; }
+svg .a-own { stroke: var(--own); }
+svg .a-foreign { stroke: var(--foreign); stroke-dasharray: 6 5; }
+svg .a-grey { stroke: var(--grey); }
+svg .a-cloud { stroke: var(--cloud); }
+svg .lane { stroke: var(--line); stroke-width: 1.25; stroke-dasharray: 3 5; }
+svg .num { fill: var(--fg); }
+svg .numt { fill: var(--bg); font-size: 12px; font-weight: 700; }
+svg .mk-own { fill: var(--own); } svg .mk-foreign { fill: var(--foreign); }
+svg .mk-grey { fill: var(--grey); } svg .mk-cloud { fill: var(--cloud); }
+</style>
+<style>
+svg .actor { fill: var(--card); stroke: var(--fg); stroke-width: 1.5; }
+.seeing { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.seeing ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>How /lightHAL hands work to a Claude cloud session</h1>
+    <p class="lead">You type a task. Your local Claude starts a brand-new cloud session with that task, the session works on its own copy of one GitHub repo and pushes its own branch, and your local Claude picks the result up from GitHub. Placeholders in capitals are yours to fill in.</p>
+  </header>
+
+  <section>
+    <h2>1 · The map</h2>
+    <p>Three places are involved. Your machine and the cloud session never talk directly: GitHub is the only thing both can see.</p>
+    <div class="legend">
+      <span><i class="sw" style="color:var(--own)"></i>your repos: clone, push, fetch</span>
+      <span><i class="sw dash" style="color:var(--foreign)"></i>refused</span>
+      <span><i class="sw" style="color:var(--grey)"></i>local only</span>
+      <span><i class="sw" style="color:var(--cloud)"></i>Anthropic cloud</span>
+    </div>
+    <figure>
+      <svg viewBox="0 0 1100 690" role="img" aria-label="Map of your machine, GitHub and the cloud session for lightHAL">
+        <defs>
+          <marker id="o-own" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-own"/></marker>
+          <marker id="o-foreign" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-foreign"/></marker>
+          <marker id="o-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-grey"/></marker>
+          <marker id="o-cloud" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-cloud"/></marker>
+        </defs>
+
+        <rect class="zone" x="16" y="16" width="364" height="658" rx="12"/>
+        <rect class="zone" x="400" y="16" width="390" height="658" rx="12"/>
+        <rect class="zone" x="810" y="16" width="274" height="658" rx="12"/>
+        <text class="zl" x="32" y="44">YOUR MACHINE</text>
+        <text class="zl" x="416" y="44">GITHUB</text>
+        <text class="zl" x="826" y="44">ANTHROPIC CLOUD</text>
+
+        <!-- local -->
+        <rect class="box" x="30" y="66" width="330" height="96" rx="8"/>
+        <text class="t" x="46" y="92">Your local Claude session</text>
+        <text class="s" x="46" y="114">Where you type /lightHAL "task".</text>
+        <text class="m" x="46" y="138">~/.claude/commands/lightHAL.md</text>
+        <text class="m" x="46" y="156">~/.claude/utils/lighthal.ts</text>
+
+        <rect class="box" x="30" y="180" width="330" height="88" rx="8"/>
+        <text class="t" x="46" y="206">Your own working copies</text>
+        <text class="s" x="46" y="228">Never used for launching. Unpushed work</text>
+        <text class="s" x="46" y="246">and private files stay here.</text>
+
+        <rect class="own" x="30" y="300" width="330" height="128" rx="8"/>
+        <text class="m" x="46" y="326" style="font-weight:500">~/work/lighthal/pad</text>
+        <text class="t" x="46" y="350">The launch pad</text>
+        <text class="s" x="46" y="372">ONE folder. Emptied and fresh-cloned</text>
+        <text class="s" x="46" y="390">from GitHub for every job. Trusted once,</text>
+        <text class="s" x="46" y="408">by you, then works for every repo.</text>
+
+        <rect class="box" x="30" y="446" width="330" height="72" rx="8"/>
+        <text class="m" x="46" y="472">~/work/lighthal/cache/</text>
+        <text class="s" x="46" y="494">What "wait" reads. Never launched from.</text>
+
+        <rect class="box" x="30" y="536" width="330" height="72" rx="8"/>
+        <text class="m" x="46" y="562">~/work/lighthal/config.json</text>
+        <text class="s" x="46" y="584">owner, default repo, commit author</text>
+
+        <!-- github -->
+        <rect class="frame-own" x="414" y="66" width="362" height="420" rx="10"/>
+        <text class="t" x="430" y="90" style="fill:var(--own)">YOUR-GITHUB-ORG</text>
+        <text class="s" x="430" y="110">the only owner lightHAL accepts</text>
+        <rect class="own" x="430" y="126" width="330" height="128" rx="8"/>
+        <text class="m" x="446" y="152" style="font-weight:500">YOUR-REPO</text>
+        <text class="s" x="446" y="176">main ← the base the job starts from</text>
+        <text class="s" x="446" y="196">(only what is pushed counts)</text>
+        <text class="s" x="446" y="222">claude/&lt;name&gt; ← the session's own</text>
+        <text class="s" x="446" y="240">branch, where the result lands</text>
+        <rect class="own" x="430" y="270" width="330" height="96" rx="8"/>
+        <text class="t" x="446" y="296">Your other repos</text>
+        <text class="s" x="446" y="318">Same rules, one repo per job:</text>
+        <text class="m" x="446" y="342">/lightHAL … repo YOUR-ORG/OTHER</text>
+        <text class="s" x="430" y="406">Branch protection on main is the real</text>
+        <text class="s" x="430" y="424">guard: GitHub does not limit which</text>
+        <text class="s" x="430" y="442">branch a cloud session pushes.</text>
+
+        <rect class="foreign" x="414" y="510" width="362" height="98" rx="10"/>
+        <text class="t" x="430" y="536" style="fill:var(--foreign)">Any other owner's repos</text>
+        <text class="s" x="430" y="558">e.g. a template you cloned from</text>
+        <text class="s" x="430" y="578">lightHAL refuses them before</text>
+        <text class="s" x="430" y="596">anything is sent.</text>
+
+        <!-- cloud -->
+        <rect class="cloudb" x="826" y="66" width="242" height="72" rx="8"/>
+        <text class="t" x="842" y="92">claude.ai/code</text>
+        <text class="s" x="842" y="114">open, watch or answer</text>
+        <text class="s" x="842" y="130">a running session</text>
+        <rect class="cloudb" x="826" y="180" width="242" height="186" rx="8"/>
+        <text class="t" x="842" y="206">Cloud session</text>
+        <text class="s" x="842" y="228">A fresh VM per job, with its</text>
+        <text class="s" x="842" y="246">own clone of ONE repo.</text>
+        <text class="s" x="842" y="272">Your task is its first prompt,</text>
+        <text class="s" x="842" y="290">so it counts as yours.</text>
+        <text class="s" x="842" y="316">Sees GitHub only: not your</text>
+        <text class="s" x="842" y="334">machine, config or memory.</text>
+        <text class="s" x="842" y="356">Several can run at once.</text>
+
+        <!-- arrows -->
+        <path class="a a-grey" d="M30 120 H22 V340 H30" marker-end="url(#o-grey)"/>
+        <path class="a a-own" d="M430 190 H398 V340 H360" marker-end="url(#o-own)"/>
+        <text class="lbl-own" x="366" y="332">clone</text>
+        <path class="a a-own" d="M430 236 H408 V482 H360" marker-end="url(#o-own)"/>
+        <text class="lbl-own" x="366" y="474">fetch</text>
+        <path class="a a-foreign" d="M360 572 H414" marker-end="url(#o-foreign)"/>
+        <text class="lbl-foreign" x="364" y="564">refused</text>
+        <path class="a a-cloud" d="M776 210 H826" marker-end="url(#o-cloud)"/>
+        <text class="lbl-cloud" x="782" y="202">clones</text>
+        <path class="a a-cloud" d="M826 330 H784 V240 H760" marker-end="url(#o-cloud)"/>
+        <text class="lbl-cloud" x="786" y="348">pushes</text>
+        <path class="a a-cloud" d="M947 138 V180" marker-start="url(#o-cloud)" marker-end="url(#o-cloud)"/>
+        <path class="a a-cloud" d="M30 380 H22 V650 H1040 V366" marker-end="url(#o-cloud)"/>
+        <text class="lbl-cloud" x="420" y="642">claude --cloud from the pad starts the session (task + ticket = its first prompt)</text>
+      </svg>
+    </figure>
+  </section>
+
+  <section>
+    <h2>2 · One job, step by step</h2>
+    <p>Read top to bottom. Nothing lands on <code>main</code> by itself.</p>
+    <figure>
+      <svg viewBox="0 0 1100 650" role="img" aria-label="Sequence of one lightHAL job">
+        <defs>
+          <marker id="q-own" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-own"/></marker>
+          <marker id="q-cloud" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-cloud"/></marker>
+          <marker id="q-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk-grey"/></marker>
+        </defs>
+        <rect class="box" x="40" y="20" width="220" height="58" rx="8"/>
+        <text class="t" x="150" y="44" text-anchor="middle">You + local Claude</text>
+        <text class="m" x="150" y="64" text-anchor="middle">/lightHAL</text>
+        <rect class="box" x="310" y="20" width="220" height="58" rx="8"/>
+        <text class="t" x="420" y="44" text-anchor="middle">Launch pad</text>
+        <text class="m" x="420" y="64" text-anchor="middle">~/work/lighthal/pad</text>
+        <rect class="own" x="580" y="20" width="220" height="58" rx="8"/>
+        <text class="t" x="690" y="44" text-anchor="middle">GitHub</text>
+        <text class="m" x="690" y="64" text-anchor="middle">YOUR-ORG/YOUR-REPO</text>
+        <rect class="cloudb" x="850" y="20" width="220" height="58" rx="8"/>
+        <text class="t" x="960" y="44" text-anchor="middle">Cloud session</text>
+        <text class="m" x="960" y="64" text-anchor="middle">Anthropic VM</text>
+        <line class="lane" x1="150" y1="78" x2="150" y2="630"/>
+        <line class="lane" x1="420" y1="78" x2="420" y2="630"/>
+        <line class="lane" x1="690" y1="78" x2="690" y2="630"/>
+        <line class="lane" x1="960" y1="78" x2="960" y2="630"/>
+
+        <circle class="num" cx="24" cy="120" r="12"/><text class="numt" x="24" y="124" text-anchor="middle">1</text>
+        <rect class="box" x="44" y="102" width="212" height="36" rx="6"/>
+        <text class="s" x="150" y="125" text-anchor="middle" style="fill:var(--fg)">task checked: owner, gitleaks</text>
+        <circle class="num" cx="24" cy="180" r="12"/><text class="numt" x="24" y="184" text-anchor="middle">2</text>
+        <path class="a a-own" d="M690 180 H426" marker-end="url(#q-own)"/>
+        <text class="lbl" x="556" y="170" text-anchor="middle">empty pad, fresh clone of main</text>
+        <circle class="num" cx="24" cy="240" r="12"/><text class="numt" x="24" y="244" text-anchor="middle">3</text>
+        <path class="a a-cloud" d="M420 240 H954" marker-end="url(#q-cloud)"/>
+        <text class="lbl-cloud" x="690" y="230" text-anchor="middle">claude --cloud: task + ticket lh-… as its first prompt</text>
+        <circle class="num" cx="24" cy="300" r="12"/><text class="numt" x="24" y="304" text-anchor="middle">4</text>
+        <path class="a a-cloud" d="M690 300 H954" marker-end="url(#q-cloud)"/>
+        <text class="lbl-cloud" x="822" y="290" text-anchor="middle">clones the repo</text>
+        <circle class="num" cx="24" cy="364" r="12"/><text class="numt" x="24" y="368" text-anchor="middle">5</text>
+        <rect class="cloudb" x="866" y="342" width="188" height="48" rx="6"/>
+        <text class="s" x="960" y="362" text-anchor="middle" style="fill:var(--fg)">does the work, commits,</text>
+        <text class="s" x="960" y="380" text-anchor="middle" style="fill:var(--fg)">ends with "… done" commit</text>
+        <circle class="num" cx="24" cy="430" r="12"/><text class="numt" x="24" y="434" text-anchor="middle">6</text>
+        <path class="a a-cloud" d="M960 430 H696" marker-end="url(#q-cloud)"/>
+        <text class="lbl-cloud" x="828" y="420" text-anchor="middle">push claude/&lt;name&gt;</text>
+        <circle class="num" cx="24" cy="490" r="12"/><text class="numt" x="24" y="494" text-anchor="middle">7</text>
+        <path class="a a-grey" d="M690 490 H156" marker-end="url(#q-grey)"/>
+        <text class="lbl" x="420" y="480" text-anchor="middle">wait: spots the done commit, reads the summary</text>
+        <circle class="num" cx="24" cy="550" r="12"/><text class="numt" x="24" y="554" text-anchor="middle">8</text>
+        <rect class="box" x="44" y="532" width="212" height="36" rx="6"/>
+        <text class="s" x="150" y="555" text-anchor="middle" style="fill:var(--fg)">Claude reports · you decide</text>
+        <circle class="num" cx="24" cy="610" r="12"/><text class="numt" x="24" y="614" text-anchor="middle">9</text>
+        <path class="a a-own" d="M150 610 H684" marker-end="url(#q-own)"/>
+        <text class="lbl-own" x="420" y="600" text-anchor="middle">only if you say so: cherry-pick the work → push main</text>
+      </svg>
+    </figure>
+  </section>
+
+  <section>
+    <h2>3 · Why it is built this way</h2>
+    <div class="cols">
+      <div class="note good">
+        <h3>A new session per job, not a message</h3>
+        <p>Asking an already-running cloud session by message counts as "another session asked", and its safety checks block anything that looks sensitive. It also can't reply. Starting a new session with the task as its first prompt makes the task yours, and the "done" commit replaces the missing reply.</p>
+      </div>
+      <div class="note good">
+        <h3>One pad, trusted once</h3>
+        <p>Claude Code asks you to trust each folder once, and a trusted parent folder doesn't cover a clone inside it. So every job uses the same folder, emptied and re-cloned each time. Only the ~10-second launch takes turns; the sessions themselves run in parallel.</p>
+      </div>
+      <div class="note bad">
+        <h3>Never launched from your own checkout</h3>
+        <p><code>claude --cloud</code> clones the current folder's GitHub remote. A working copy can have several remotes, and one may point at a repo you don't own. The pad has exactly one remote, and a fresh clone carries no other repo's history.</p>
+      </div>
+    </div>
+    <div class="seeing">
+      <div class="note"><h3>The cloud session sees</h3><ul><li>Everything pushed to the one repo it was started on</li><li>That repo's own <code>CLAUDE.md</code> and <code>.claude/</code> skills and settings</li><li>Your task text</li></ul></div>
+      <div class="note"><h3>The cloud session does not see</h3><ul><li>Unpushed work, gitignored files, credentials</li><li>Your local <code>~/.claude</code> config, commands and memory</li><li>Your local network, or any other repo</li></ul></div>
+    </div>
+  </section>
+</div>
