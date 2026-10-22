@@ -21,7 +21,11 @@
  *   {"owner": "YOUR-GITHUB-ORG",            LIGHTHAL_OWNER (required): the only
  *                                            GitHub user/org whose repos may be used
  *    "defaultRepo": "YOUR-REPO",            LIGHTHAL_DEFAULT_REPO: used when --repo is omitted
- *    "author": "YOUR NAME <YOUR-EMAIL>"}    LIGHTHAL_AUTHOR: commit author the session must use
+ *    "author": "YOUR NAME <YOUR-EMAIL>",    LIGHTHAL_AUTHOR: commit author the session must use
+ *    "appRepos": ["YOUR-REPO"]}             LIGHTHAL_APP_REPOS (comma-separated): repos the Claude GitHub
+ *                                            App is installed on; when set, start refuses any other. Without
+ *                                            the app, `claude --cloud` uploads the pad as a bundle and the
+ *                                            session cannot push its branch (no result ever comes back)
  *
  * Launch rules:
  *   - only repos under the configured owner; never launched from your working
@@ -132,6 +136,7 @@ interface Config {
 	owner: string;
 	defaultRepo?: string;
 	author?: string;
+	appRepos?: string[];
 }
 
 /** $LIGHTHAL_HOME/config.json, each key overridden by its LIGHTHAL_* env var. */
@@ -155,6 +160,9 @@ function loadConfig(): Config {
 		owner,
 		defaultRepo: process.env.LIGHTHAL_DEFAULT_REPO || file.defaultRepo,
 		author: process.env.LIGHTHAL_AUTHOR || file.author,
+		appRepos: process.env.LIGHTHAL_APP_REPOS
+			? process.env.LIGHTHAL_APP_REPOS.split(",").map((r) => r.trim())
+			: file.appRepos,
 	};
 }
 
@@ -385,6 +393,14 @@ async function start(flags: Record<string, string>): Promise<Out> {
 	if (!repo)
 		throw new Fail(1, "no repo: pass --repo or set defaultRepo in config");
 	const name = repoName(repo, cfg.owner);
+	if (cfg.appRepos && !cfg.appRepos.includes(name))
+		throw new Fail(
+			1,
+			`${cfg.owner}/${name}: the Claude GitHub App is not installed on it (not in appRepos), so the cloud ` +
+				"session would get an uploaded copy it cannot push back. Install the app on the repo " +
+				`(github.com/apps/claude, Configure, Repository access), then add "${name}" to appRepos in ` +
+				join(HOME, "config.json"),
+		);
 	const base = flags.base || "main";
 	if (run(["git", "check-ref-format", "--branch", base]).code !== 0)
 		throw new Fail(1, `bad base: ${base}`);

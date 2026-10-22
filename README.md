@@ -35,12 +35,16 @@ through GitHub: the session pushes its own `claude/*` branch, and the command wa
    {
      "owner": "YOUR-GITHUB-ORG",
      "defaultRepo": "YOUR-REPO",
-     "author": "YOUR NAME <YOUR-GITHUB-NOREPLY-EMAIL>"
+     "author": "YOUR NAME <YOUR-GITHUB-NOREPLY-EMAIL>",
+     "appRepos": ["YOUR-REPO"]
    }
    ```
 
    `owner` is required: the only GitHub user or org whose repos the command will use. `author` is optional; set it
-   if GitHub refuses pushes with your private email.
+   if GitHub refuses pushes with your private email. `appRepos` is optional but recommended: the repos the
+   [Claude GitHub App](https://github.com/apps/claude) is installed on. On any other repo `claude --cloud` uploads
+   your copy instead of cloning, and the session cannot push its result back; with the list set, `start` refuses
+   those repos up front.
 3. Optional check: `bun test ~/.claude/utils/lighthal.test.ts` (offline, no cloud session).
 4. **Trust the launch folder once.** Every job is launched from one folder, `~/work/lighthal/pad`. Your first
    `/lightHAL` stops with exit 3, "pad not trusted" (the clone it made is waiting there). Run

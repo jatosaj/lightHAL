@@ -175,6 +175,30 @@ describe("config", () => {
 		expect(prompt).toContain("3. Push to your own claude/* branch only");
 	});
 
+	test("refuses a repo the Claude GitHub App is not installed on (appRepos)", () => {
+		// Without the app, claude --cloud uploads the pad as a bundle and the session cannot push its branch.
+		const r = run(["start", "--repo", "acme/demo", "--task", "x"], {
+			LIGHTHAL_APP_REPOS: "other,vault",
+		});
+		expect(r.code).toBe(1);
+		expect(String(r.json.error)).toContain("Claude GitHub App");
+		expect(String(r.json.error)).toContain("appRepos");
+	});
+
+	test("starts on a repo listed in appRepos (config.json)", () => {
+		const home = mkdtempSync(join(ROOT, "home-app-"));
+		writeFileSync(
+			join(home, "config.json"),
+			JSON.stringify({ owner: "acme", appRepos: ["demo"] }),
+		);
+		const r = run(
+			["start", "--repo", "acme/demo", "--task", "x"],
+			{ LIGHTHAL_OWNER: "" },
+			home,
+		);
+		expect(r.code).toBe(0);
+	});
+
 	test("refuses a missing repo when no default is configured", () => {
 		const r = run(["start", "--task", "x"]);
 		expect(r.code).toBe(1);

@@ -18,6 +18,9 @@ Script: `~/.claude/utils/lighthal.ts` (flags, config and exit codes in its heade
 - **Never merge.** Report the result; cherry-pick the work commits only when the user says so,
   and never the `done` commit or the whole `claude/*` branch.
 - Cloud sessions see GitHub only: no local files, no local network, nothing gitignored. Don't send tasks that need them.
+- **Only repos with the Claude GitHub App installed.** On any other repo `claude --cloud` uploads your copy as a bundle
+  and the session cannot push its result back. List the app's repos in `appRepos` in `config.json` and `start` refuses
+  the rest; install the app (github.com/apps/claude → Configure → Repository access) before adding a repo.
 
 ## Steps
 
